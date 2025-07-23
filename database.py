@@ -1,5 +1,6 @@
 import customtkinter
 import sqlite3
+from werkzeug.security import generate_password_hash,check_password_hash
 
 customtkinter.set_default_color_theme("blue")
 
@@ -47,12 +48,14 @@ def criar_conta(verificacao,nome,email,senha):
     conexao = conectar_banco()
     cursor = conexao.cursor()
     
+    senha_criptografada = generate_password_hash(senha)
+    
     if verificacao == 1:
-        cursor.execute("""insert into empregados(email,nome,senha) VALUES (?,?,?)""",(email,nome,senha))  
-        print("deu boa")
+        cursor.execute("""insert into empregados(email,nome,senha) VALUES (?,?,?)""",(email,nome,senha_criptografada))  
+        
     elif verificacao == 2:
-        cursor.execute("""insert into empregadores(email,nome,senha) VALUES (?,?,?)""",(email,nome,senha))  
-        print("deu boa")
+        cursor.execute("""insert into empregadores(email,nome,senha) VALUES (?,?,?)""",(email,nome,senha_criptografada))  
+        
         
     conexao.commit()
     conexao.close()
@@ -60,26 +63,41 @@ def criar_conta(verificacao,nome,email,senha):
 def login(verificacao,email,senha):
     conexao = conectar_banco()
     cursor = conexao.cursor()
-    if verificacao == 1:
-    
-        cursor.execute("""SELECT * from empregados where email = ?""",(email,))
-        usuario = cursor.fetchall()
-    
-    elif verificacao == 2:
-        
-        cursor.execute("""SELECT * from empregadores where email = ?""",(email,))
-        usuario = cursor.fetchall()
-    
-    
-    if usuario:
-        if usuario[2] == senha:
-            return True
-        else:
-            return "Senha ou email incorretos"
-    return "Senha ou email incorretos"
     
     
     
+    try:
+        if verificacao == 1:
+            cursor.execute('''SELECT count(email) from empregados WHERE email=?''',(email,))
+            conexao.commit()
+            quantidade_de_emails = cursor.fetchone()
+            if(quantidade_de_emails[0] < 0):
+                print("LOG: email não encontrado.")
+                return False
+            cursor.execute("""SELECT * from empregados where email = ?""",(email,))
+            
+            conexao.commit()
+               
+            senha_criptografada = cursor.fetchone()
+            resultado_verificacao = check_password_hash(senha_criptografada[0], senha)
+            return resultado_verificacao
+            
+        elif verificacao == 2:
+            cursor.execute('''SELECT count(email) from empregados WHERE email=?''',(email,))
+            conexao.commit()
+            quantidade_de_emails = cursor.fetchone()
+            if(quantidade_de_emails[0] < 0):
+                print("LOG: email não encontrado.")
+                return False
+            cursor.execute("""SELECT * from empregadores where email = ?""",(email,))
+            conexao.commit()
+            senha_criptografada = cursor.fetchone()
+            resultado_verificacao = check_password_hash(senha_criptografada[0], senha)
+            print("OOOOOOOOOOK")
+            return resultado_verificacao
+            
+    except:
+        return False
 
 if __name__ == "__main__":
     criar_tabelas()
