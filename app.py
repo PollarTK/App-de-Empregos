@@ -6,6 +6,7 @@ customtkinter.set_default_color_theme("green")  # Tema Verde
 
 def voltar():
     atualizar_layout()
+    database.email_usuario_logado = None
     database.card_title.pack(pady=12)
     button.pack(pady=100, padx=20)
     button2.pack(pady=100, padx=20)
@@ -151,7 +152,22 @@ def realizar_login(verificacao, email, senha):
         # Aqui você pode adicionar uma mensagem de erro se o login falhar
         print("Login falhou. Verifique suas credenciais.")
 
+def inputs_vaga():
+    atualizar_layout()
+    nome_vaga = customtkinter.CTkEntry(
+        master=database.card_frame,
+        placeholder_text="Ex: Enfermeiro, Pedreiro...",
+        width=200,
+        height=40,
+        fg_color="white",
+        text_color="black",
+        border_color="gray"
+    )
+
 def inputs_curriculo():
+    horarios = customtkinter.CTkComboBox(master=database.card_frame,
+        values=["Qualquer", "Integral", "Manhã", "Tarde", "Noite"])
+    
     nome_entry = customtkinter.CTkEntry(
         master=database.card_frame,
         placeholder_text="Nome",
@@ -179,24 +195,9 @@ def inputs_curriculo():
         text_color="black",
         border_color="gray"
     )
-    horarios_entry = customtkinter.CTkEntry(
-        master=database.card_frame,
-        placeholder_text="Disponibilidade De Horário",
-        width=200,
-        height=40,
-        fg_color="white",
-        text_color="black",
-        border_color="gray"
-    )
-    escolaridade_entry = customtkinter.CTkEntry(
-        master=database.card_frame,
-        placeholder_text="Escolaridade",
-        width=200,
-        height=40,
-        fg_color="white",
-        text_color="black",
-        border_color="gray"
-    )
+    
+    escolaridade = customtkinter.CTkComboBox(master=database.card_frame,
+        values=["Fundamental Incompleto", "Fundamental Completo", "Médio Incompleto", "Médio Completo", "Superior Incompleto", "Superior Completo"])
     
     botao_voltar_home = customtkinter.CTkButton(
         master=database.card_frame,
@@ -212,7 +213,7 @@ def inputs_curriculo():
     botao_criar = customtkinter.CTkButton(
         master=database.card_frame,
         text="Criar Currículo",
-        command=lambda: criar_curriculo(nome_entry.get(), contato_entry.get(), endereco_entry.get(), horarios_entry.get(), escolaridade_entry.get()),
+        command=lambda: criar_curriculo(nome_entry.get(), contato_entry.get(), endereco_entry.get(), horarios.get(), escolaridade.get()),
         fg_color="green",
         hover_color="darkgreen",
         text_color="white",
@@ -224,8 +225,8 @@ def inputs_curriculo():
     nome_entry.pack(pady=20, padx=20)
     contato_entry.pack(pady=20, padx=20)
     endereco_entry.pack(pady=20, padx=20)
-    horarios_entry.pack(pady=20, padx=20)
-    escolaridade_entry.pack(pady=20, padx=20)
+    horarios.pack(padx=20, pady=20)
+    escolaridade.pack(pady=20, padx=20)
     botao_criar.pack(pady=20)
     botao_voltar_home.pack(pady=100, padx=20)
 
@@ -240,7 +241,40 @@ def botao_curriculo():
         width=200,
         height=40
     )
+
+    botao_logout = customtkinter.CTkButton(
+        master=database.card_frame,
+        text="Logout",
+        command=voltar,
+        fg_color="green",
+        hover_color="darkgreen",
+        text_color="white",
+        width=100,
+        height=20
+    )
+
+    criar_buscar = customtkinter.CTkButton(
+        master=database.card_frame,
+        text="Buscar Vagas",
+        command=inputs_vaga,
+        fg_color="green",
+        hover_color="darkgreen",
+        text_color="white",
+        width=200,
+        height=40
+    )
+
     botao_criar.pack(pady=20)
+    criar_buscar.pack(pady=20)
+    busca = database.buscar_vagas()
+    for vaga in busca:
+        database.card_vaga.pack(pady=5)
+        print(vaga)
+
+    botao_logout.pack(pady=100, padx=40)
+
+
+
 
 def criar_curriculo(nome, contato, endereco, horarios, escolaridade):
     # Aqui você deve garantir que o email do usuário logado esteja acessível  
@@ -248,20 +282,8 @@ def criar_curriculo(nome, contato, endereco, horarios, escolaridade):
     if not all([nome, contato, endereco, horarios, escolaridade]):
         print("Por favor, preencha todos os campos.")
         return
-    
     # Chame a função de criação de currículo no banco de dados
     database.criar_curriculo(nome, contato, endereco, horarios, escolaridade, email_usuario)
-    print(f"{email_usuario}")
-
-
-    
-    
-    
-    
-    
-    
-    
-    
 
 def cadastrar(verificacao):
     atualizar_layout()  # Limpa a interface anterior
@@ -331,3 +353,4 @@ button.pack(pady=100, padx=20)
 button2.pack(pady=100, padx=20)
 
 database.root.mainloop()
+database.buscar_vagas()
