@@ -1,4 +1,5 @@
 import customtkinter
+
 import database
 
 customtkinter.set_appearance_mode("dark")  # Modo escuro
@@ -84,6 +85,10 @@ def realizar_login(verificacao, email, senha):
         print("Login falhou. Verifique suas credenciais.")
 
 
+def candidatar():
+    pass
+
+
 def inputs_curriculo():
     atualizar_layout()
     nome_entry = criar_entry(database.card_frame, "Nome")
@@ -93,7 +98,7 @@ def inputs_curriculo():
     horarios = customtkinter.CTkComboBox(master=database.card_frame, values=[
                                          "Qualquer", "Integral", "Manhã", "Tarde", "Noite"])
     escolaridade = customtkinter.CTkComboBox(master=database.card_frame, values=[
-                                             "Fundamental Incompleto", "Fundamental Completo", "Médio Incompleto", "Médio Completo", "Superior Incompleto", "Superior Completo"])
+                                             "Ensino Fundamental Incompleto", "Ensino Fundamental Completo", "Ensino Médio Incompleto", "Ensino Médio Completo", "Técnico Incompleto", "Técnico Completo", "Graduação Incompleta", "Graduação Completa"])
 
     botao_voltar_home = criar_botao(database.card_frame, "Voltar", voltar_home)
     botao_criar = criar_botao(database.card_frame, "Criar Currículo", lambda: criar_curriculo(
@@ -117,9 +122,30 @@ def botao_curriculo():
 
     botao_criar.pack(pady=20)
     criar_buscar.pack(pady=20)
+
+    # Frame para conter os cards de vagas
+    frame_vagas = customtkinter.CTkFrame(database.card_frame)
+    frame_vagas.pack(pady=10)
+
     busca = database.buscar_vagas()
     for vaga in busca:
-        database.card_vaga.pack(pady=5)
+        # Cria um novo card para cada vaga
+        card_vaga = customtkinter.CTkFrame(frame_vagas, border_width=2, width=600, height=450, border_color="green",
+                                           corner_radius=20)
+        card_vaga.pack(pady=5)
+
+        botao_candidatar = criar_botao(card_vaga, "Candidatar-se", candidatar)
+
+        nome_vaga = customtkinter.CTkLabel(
+            card_vaga, text=f"Vaga: {vaga[1]}")
+        nome_vaga.pack(side="top", pady=5)
+
+        requisitos = customtkinter.CTkLabel(
+            card_vaga, text=f"Requisitos: {vaga[2]}")
+        requisitos.pack(side="top", pady=5)
+
+        botao_candidatar.pack(side="left")
+
     botao_logout.pack()
 
 

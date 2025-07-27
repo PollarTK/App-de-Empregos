@@ -22,13 +22,17 @@ email_usuario_logado = None
 
 # Frames e Labels
 card_frame = customtkinter.CTkScrollableFrame(
-    root, border_width=2, width=400, height=350, border_color="green", corner_radius=20)
+    root, border_width=2, width=600, height=450, border_color="green", corner_radius=20)
+
 card_title = customtkinter.CTkLabel(card_frame, text="📝 Escolha uma Opção", font=(
     "Arial", 16, "bold"), text_color="#4ECB71")
+
 card_home_title = customtkinter.CTkLabel(
     card_frame, text="Buscando Emprego? Crie seu Currículo!", font=("Arial", 16, "bold"), text_color="#4ECB71")
+
 card_vaga = customtkinter.CTkFrame(card_frame, border_width=2, border_color="green",
                                    corner_radius=20)
+
 card_title.pack(pady=(10, 20), anchor="center")
 card_frame.pack(pady=(10, 20), anchor="center")
 
@@ -63,15 +67,16 @@ def empresas_aleatorias():
         ("hospitalvida@saude.com", "Hospital Vida", "123")
     ]
     vagas = [
-        ("Assistente de mão", "Cursando ensino médio",
-         "qualquer", 1200, "empresa1@gmail.com"),
-        ("Desenvolvedor Júnior", "Técnico em TI",
+        ("Assistente de mão", "Ensino Médio Incompleto",
+         "Qualquer", 1200, "empresa1@gmail.com"),
+        ("Desenvolvedor Júnior", "Técnico",
          "Integral", 3000, "techjobs@empresa.com"),
-        ("Auxiliar Administrativo", "Ensino médio completo",
+        ("Auxiliar Administrativo", "Ensino Médio Completo",
          "Manhã", 1800, "vagasrh@empresa.com"),
-        ("Pedreiro", "Ensino médio completo",
+        ("Pedreiro", "Ensino Médio Completo",
          "Integral", 2500, "construtora@concreto.com"),
-        ("Enfermeiro", "Enfermagem", "Integral", 4000, "hospitalvida@saude.com")
+        ("Enfermeiro", "Técnico",
+         "Integral", 4000, "hospitalvida@saude.com")
     ]
 
     for email, nome, senha in empresas:
