@@ -48,15 +48,15 @@ def voltar_home():
 def botao_emprego(tipo):
     atualizar_layout()
     database.verificacao = tipo
-    botao_cadastro = criar_botao(
-        database.card_frame, "Cadastro", lambda: cadastrar(database.verificacao))
     botao_login = criar_botao(
         database.card_frame, "Login", lambda: login(database.verificacao))
+    botao_cadastro = criar_botao(
+        database.card_frame, "Cadastro", lambda: cadastrar(database.verificacao))
     botao_voltar = criar_botao(database.card_frame, "Voltar", voltar)
 
-    botao_cadastro.pack(pady=100, padx=10)
-    botao_login.pack(pady=10, padx=10)
-    botao_voltar.pack(pady=150)
+    botao_login.pack()
+    botao_cadastro.pack()
+    botao_voltar.pack()
 
 
 def login(verificacao):
@@ -70,8 +70,8 @@ def login(verificacao):
         verificacao, email_entry.get(), senha_entry.get()))
     botao_voltar = criar_botao(database.card_frame, "Voltar", voltar)
 
-    botao_login.pack(pady=100, padx=10)
-    botao_voltar.pack(pady=150)
+    botao_login.pack()
+    botao_voltar.pack()
 
 
 def realizar_login(verificacao, email, senha):
@@ -120,8 +120,7 @@ def botao_curriculo():
     busca = database.buscar_vagas()
     for vaga in busca:
         database.card_vaga.pack(pady=5)
-        print(vaga)
-    botao_logout.pack(pady=100, padx=40)
+    botao_logout.pack()
 
 
 def criar_curriculo(nome, contato, endereco, horarios, escolaridade):
@@ -147,8 +146,8 @@ def cadastrar(verificacao):
         verificacao, email_entry.get(), nome_entry.get(), senha_entry.get()))
     botao_voltar = criar_botao(database.card_frame, "Voltar", voltar)
 
-    botao_cadastro.pack(pady=100, padx=10)
-    botao_voltar.pack(pady=150)
+    botao_cadastro.pack()
+    botao_voltar.pack()
 
 
 def atualizar_layout():
