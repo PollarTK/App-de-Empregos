@@ -12,7 +12,7 @@ TABLES = {
     "empregadores": "CREATE TABLE IF NOT EXISTS empregadores (email TEXT PRIMARY KEY, nome TEXT, senha TEXT)",
     "curriculo": "CREATE TABLE IF NOT EXISTS Curriculo (id INTEGER PRIMARY KEY, nome TEXT, contato INTEGER, endereco TEXT, horarios TEXT, escolaridade TEXT, email_usuario TEXT, FOREIGN KEY(email_usuario) REFERENCES empregados(email))",
     "vaga": "CREATE TABLE IF NOT EXISTS Vaga (id INTEGER PRIMARY KEY, nome TEXT, requisitos TEXT, disponibilidade INTEGER, salario REAL, email_usuario TEXT, FOREIGN KEY(email_usuario) REFERENCES empregadores(email))",
-    "candidatos": "CREATE TABLE IF NOT EXISTS Candidatos (id INTEGER PRIMARY KEY, candidato_nome TEXT, candidato_email TEXT, FOREIGN KEY (candidato_nome) REFERENCES empregados(nome), FOREIGN KEY (candidato_email) REFERENCES empregados(email))"
+    "candidatos": "CREATE TABLE IF NOT EXISTS Candidatos (id INTEGER PRIMARY KEY, candidato_nome TEXT, candidato_email TEXT, vaga_email TEXT, FOREIGN KEY (candidato_nome) REFERENCES empregados(nome), FOREIGN KEY (candidato_email) REFERENCES empregados(email))"
 }
 
 root = customtkinter.CTk()
@@ -22,7 +22,7 @@ email_usuario_logado = None
 
 # Frames e Labels
 card_frame = customtkinter.CTkScrollableFrame(
-    root, border_width=2, width=600, height=450, border_color="green", corner_radius=20)
+    root, border_width=2, width=700, height=800, border_color="green", corner_radius=20)
 
 card_title = customtkinter.CTkLabel(card_frame, text="📝 Escolha uma Opção", font=(
     "Arial", 16, "bold"), text_color="#4ECB71")
@@ -131,9 +131,48 @@ def criar_curriculo(nome, contato, endereco, horarios, escolaridade, email):
     mensagem("Currículo Criado Com Sucesso!")
 
 
+def criar_vaga(nome, requisitos, disponibilidade, salario, email):
+    executar_sql('''INSERT INTO vaga (nome, requisitos, disponibilidade, salario, email_usuario) VALUES (?, ?, ?, ?, ?)''',
+                 (nome, requisitos, disponibilidade, salario, email))
+    mensagem("Vaga Criada Com Sucesso!")
+
+
 def buscar_vagas():
     cursor = executar_sql('SELECT * FROM vaga')
     return cursor.fetchall()
+
+def buscar_curriculo(email_usuario):
+    email_usuario = email_usuario_logado
+    cursor = executar_sql('SELECT Id, contato, endereco, horarios, escolaridade FROM curriculo WHERE email_usuario=?',(email_usuario,))
+    return cursor.fetchall()
+
+def buscar_vaga_por_id(vaga_id):
+    """Busca uma vaga específica pelo ID"""
+    cursor = executar_sql('SELECT * FROM vaga WHERE id = ?', (vaga_id,))
+    return cursor.fetchall()
+
+
+def candidatar(vaga):
+    # Busca o currículo do usuário logado
+    curriculos = buscar_curriculo(email_usuario_logado)
+    
+    if not curriculos:
+        mensagem("Você Ainda Não Possui um Currículo")
+        return
+
+    # Busca a vaga pelo ID
+    if vaga:
+        nome = curriculos[0][1]  # Acessando o nome do candidato (supondo que seja a segunda coluna)
+        candidato_email = email_usuario_logado  # E-mail do candidato
+        vaga_email = vaga[5]
+        print(vaga_email)
+        pass
+        #Insere os dados do candidato na tabela Candidatos
+        executar_sql('''INSERT INTO candidatos (candidato_nome, candidato_email, vaga_email) VALUES (?, ?, ?)''',
+                     (nome, candidato_email, vaga_email))
+        mensagem("Candidatura Enviada Com Sucesso!")
+    else:
+        mensagem("Vaga não encontrada.")
 
 
 if __name__ == "__main__":
