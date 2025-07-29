@@ -137,20 +137,37 @@ def criar_vaga(nome, requisitos, disponibilidade, salario, email):
     mensagem("Vaga Criada Com Sucesso!")
 
 
-def buscar_vagas():
-    cursor = executar_sql('SELECT * FROM vaga')
+def buscar_vagas(email_usuario):
+    if verificacao == 1:
+        cursor = executar_sql('SELECT * FROM vaga')
+    else:
+        cursor = executar_sql('SELECT * FROM vaga WHERE email_usuario=?',(email_usuario,))
     return cursor.fetchall()
 
 def buscar_curriculo(email_usuario):
     email_usuario = email_usuario_logado
-    cursor = executar_sql('SELECT Id, contato, endereco, horarios, escolaridade FROM curriculo WHERE email_usuario=?',(email_usuario,))
+    cursor = executar_sql('SELECT Id, nome, contato, endereco, horarios, escolaridade FROM curriculo WHERE email_usuario=?',(email_usuario,))
     return cursor.fetchall()
 
-def buscar_vaga_por_id(vaga_id):
-    """Busca uma vaga específica pelo ID"""
-    cursor = executar_sql('SELECT * FROM vaga WHERE id = ?', (vaga_id,))
-    return cursor.fetchall()
+def buscar_candidatos(email_usuario):
+    email_usuario = email_usuario_logado
+    cursor = executar_sql('SELECT * FROM candidatos WHERE vaga_email=?',(email_usuario,))
+    result = cursor.fetchall()
+    if not result or result == None:
+        mensagem("Ainda Não Há Candidatos!")
+    else:
+        mensagem(f"{result}")
+    return result
 
+def candidatar_todas():
+    busca = buscar_vagas()
+    curriculos = buscar_curriculo(email_usuario_logado)
+    nome = curriculos[0][1]  # Acessando o nome do candidato (supondo que seja a segunda coluna)
+    candidato_email = email_usuario_logado  # E-mail do candidato
+    for vaga in busca:
+        vaga_email = vaga[5]
+        executar_sql('''INSERT INTO candidatos (candidato_nome, candidato_email, vaga_email) VALUES (?, ?, ?)''',
+                     (nome, candidato_email, vaga_email))
 
 def candidatar(vaga):
     # Busca o currículo do usuário logado
@@ -165,8 +182,6 @@ def candidatar(vaga):
         nome = curriculos[0][1]  # Acessando o nome do candidato (supondo que seja a segunda coluna)
         candidato_email = email_usuario_logado  # E-mail do candidato
         vaga_email = vaga[5]
-        print(vaga_email)
-        pass
         #Insere os dados do candidato na tabela Candidatos
         executar_sql('''INSERT INTO candidatos (candidato_nome, candidato_email, vaga_email) VALUES (?, ?, ?)''',
                      (nome, candidato_email, vaga_email))

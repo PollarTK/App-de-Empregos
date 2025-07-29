@@ -70,21 +70,6 @@ def realizar_login(verificacao, email, senha):
     else:
         print("Login falhou. Verifique suas credenciais.")
 
-
-def candidatar(vaga):
-    # Busca o currículo do usuário logado
-    curriculos = database.buscar_curriculo(database.email_usuario_logado)
-    
-    if not curriculos:
-        database.mensagem("Você Ainda Não Possui um Currículo")
-        return
-    # Busca a vaga pelo ID
-    if vaga:
-        database.candidatar(vaga)
-    else:
-        database.mensagem("Vaga não encontrada.")
-
-
 def inputs_curriculo():
     atualizar_layout()
     if database.verificacao == 1:
@@ -140,7 +125,7 @@ def botao_curriculo():
         # Frame para conter os cards de vagas
         frame_vagas = customtkinter.CTkFrame(database.card_frame)
         frame_vagas.pack(pady=10)
-        busca = database.buscar_vagas()
+        busca = database.buscar_vagas(database.email_usuario_logado)
         for vaga in busca:
             # Cria um novo card para cada vaga
             card_vaga = customtkinter.CTkScrollableFrame(frame_vagas, border_width=2, width=500, height=200, border_color="green",
@@ -162,17 +147,21 @@ def botao_curriculo():
             salario.pack(side="top", pady=5)
             
             # Passa o ID da vaga para a função candidatar
-            botao_candidatar = criar_botao(card_vaga, "Candidatar-se", lambda: candidatar(vaga))
+            botao_candidatar = criar_botao(card_vaga, "Candidatar-se", lambda vaga=vaga: database.candidatar(vaga))
             botao_candidatar.pack(side="top")
-            botao_logout.pack(pady=10)
+            
+        botao_logout.pack(pady=10)
+        botao_candidatar_todas = criar_botao(database.card_frame, "Candidatar Todas", lambda vaga=vaga: database.candidatar_todas())
+        botao_candidatar_todas.pack(pady=20, side="top")
     else:
         botao_criar = criar_botao(
             database.card_frame, "Criar Vaga", inputs_curriculo)
-        botao_criar.pack(pady=20)
+        botao_criar.pack(side="top",pady=20)
+        botao_logout.pack(side="top",pady=10)
         # Frame para conter os cards de vagas
         frame_vagas = customtkinter.CTkFrame(database.card_frame)
         frame_vagas.pack(pady=10)
-        busca = database.buscar_vagas()
+        busca = database.buscar_vagas(database.email_usuario_logado)
         for vaga in busca:
             # Cria um novo card para cada vaga
             card_vaga = customtkinter.CTkScrollableFrame(frame_vagas, border_width=2, width=500, height=200, border_color="green",
@@ -192,6 +181,10 @@ def botao_curriculo():
             salario = customtkinter.CTkLabel(
                 card_vaga, text=f"Salário: {vaga[4]}")
             salario.pack(side="top", pady=5)
+            
+            botao_candidados = criar_botao(card_vaga, "Ver Candidatos", lambda: database.buscar_candidatos(database.email_usuario_logado))
+            botao_candidados.pack(side="top")
+            
 
 
 def criar_curriculo(nome, contato, endereco, horarios, escolaridade):

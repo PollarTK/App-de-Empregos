@@ -1,0 +1,43 @@
+import customtkinter
+
+# Função que cria e exibe o popup
+def mostrar_popup(mensagem):
+    popup = customtkinter.CTkToplevel()
+    popup.title("Aviso")
+    largura = 300
+    altura = 150
+
+    # Define o tamanho do popup
+    popup.geometry(f"{largura}x{altura}")
+    popup.resizable(False, False)
+
+    # Garante que o popup fique acima da janela principal
+    popup.transient(janela)
+    popup.grab_set()
+    popup.focus_force()
+
+    # ⬇️ Centraliza na tela
+    popup.update_idletasks()  # Atualiza o sistema de geometria
+    x = (popup.winfo_screenwidth() // 2) - (largura // 2)
+    y = (popup.winfo_screenheight() // 2) - (altura // 2)
+    popup.geometry(f"{largura}x{altura}+{x}+{y}")
+
+    # Mensagem
+    label = customtkinter.CTkLabel(popup, text=mensagem)
+    label.pack(pady=20)
+
+    # Botão de fechar
+    botao_fechar = customtkinter.CTkButton(popup, text="Fechar", command=popup.destroy)
+    botao_fechar.pack(pady=10)
+
+
+# Janela principal
+janela = customtkinter.CTk()
+janela.title("Janela Principal")
+janela.geometry("400x300")
+
+# Botão que chama o popup
+botao_popup = customtkinter.CTkButton(janela, text="Mostrar Popup", command=lambda: mostrar_popup("Candidatura enviada com sucesso!"))
+botao_popup.pack(pady=50)
+
+janela.mainloop()
