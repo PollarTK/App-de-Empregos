@@ -19,7 +19,6 @@ root = customtkinter.CTk()
 root.geometry("800x400")
 verificacao = 0
 email_usuario_logado = None
-filtrado = False
 
 # Frames e Labels
 card_frame = customtkinter.CTkScrollableFrame(
@@ -103,6 +102,10 @@ def criar_conta(verificacao, email, nome, senha):
     if verificar_email(email, tabela):
         mensagem("LOG: Email Já Cadastrado.")
         return
+    
+    elif "@" not in email:
+        mensagem("Por favor, insira um email válido")
+        return
 
     senha_criptografada = generate_password_hash(senha)
     executar_sql(f"INSERT INTO {tabela}(email, nome, senha) VALUES (?, ?, ?)",
@@ -134,6 +137,13 @@ def criar_curriculo(nome, contato, endereco, horarios, escolaridade, email):
                  (nome, contato, endereco, horarios, escolaridade, email))
     mensagem("Currículo Criado Com Sucesso!")
 
+def editar_curriculo(nome, contato, endereco, horarios, escolaridade, email):
+    executar_sql('''
+    UPDATE curriculo 
+    SET nome = ?, contato = ?, endereco = ?, horarios = ?, escolaridade = ?
+    WHERE email_usuario = ?
+    ''', (nome, contato, endereco, horarios, escolaridade, email))
+    mensagem("Currículo Criado Com Sucesso!")
 
 def criar_vaga(nome, requisitos, disponibilidade, salario, email):
     executar_sql('''INSERT INTO vaga (nome, requisitos, disponibilidade, salario, email_usuario) VALUES (?, ?, ?, ?, ?)''',

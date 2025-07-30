@@ -5,7 +5,6 @@ import database
 customtkinter.set_appearance_mode("dark")  # Modo escuro
 customtkinter.set_default_color_theme("green")  # Tema Verde
 
-
 def criar_botao(master, texto, comando, largura=200, altura=40):
     return customtkinter.CTkButton(
         master=master,
@@ -72,19 +71,37 @@ def realizar_login(verificacao, email, senha):
 
 def inputs_curriculo():
     atualizar_layout()
+    global existe
+    existe = database.buscar_curriculo(database.email_usuario_logado)
     if database.verificacao == 1:
-        nome_entry = criar_entry(database.card_frame, "Nome")
-        contato_entry = criar_entry(database.card_frame, "Contato")
-        endereco_entry = criar_entry(database.card_frame, "Endereço")
+        if not existe or existe == None:
+            nome_entry = criar_entry(database.card_frame, "Nome")
+            contato_entry = criar_entry(database.card_frame, "Contato")
+            endereco_entry = criar_entry(database.card_frame, "Endereço")
 
-        horarios = customtkinter.CTkComboBox(master=database.card_frame, values=[
-                                            "Qualquer", "Integral", "Manhã", "Tarde", "Noite"])
-        escolaridade = customtkinter.CTkComboBox(master=database.card_frame, values=[
-                                                "Ensino Fundamental Incompleto", "Ensino Fundamental Completo", "Ensino Médio Incompleto", "Ensino Médio Completo", "Técnico Incompleto", "Técnico Completo", "Graduação Incompleta", "Graduação Completa"])
+            horarios = customtkinter.CTkComboBox(master=database.card_frame, values=[
+                                                "Qualquer", "Integral", "Manhã", "Tarde", "Noite"])
+            escolaridade = customtkinter.CTkComboBox(master=database.card_frame, values=[
+                                                    "Ensino Fundamental Incompleto", "Ensino Fundamental Completo", "Ensino Médio Incompleto", "Ensino Médio Completo", "Técnico Incompleto", "Técnico Completo", "Graduação Incompleta", "Graduação Completa"])
 
-        botao_voltar_home = criar_botao(database.card_frame, "Voltar", voltar_home)
-        botao_criar = criar_botao(database.card_frame, "Criar Currículo", lambda: criar_curriculo(
-            nome_entry.get(), contato_entry.get(), endereco_entry.get(), horarios.get(), escolaridade.get()))
+            botao_voltar_home = criar_botao(database.card_frame, "Voltar", voltar_home)
+            botao_criar = criar_botao(database.card_frame, "Criar Currículo",
+                lambda: criar_curriculo(nome_entry.get(), contato_entry.get(),endereco_entry.get(), horarios.get(), escolaridade.get(), checagem=0))
+        else:
+            for dados in existe:
+                nome_entry = criar_entry(database.card_frame, f"{dados[1]}")
+                contato_entry = criar_entry(database.card_frame, f"{dados[2]}")
+                endereco_entry = criar_entry(database.card_frame, f"{dados[3]}")
+
+            horarios = customtkinter.CTkComboBox(master=database.card_frame, values=[
+                                                    "Qualquer", "Integral", "Manhã", "Tarde", "Noite"])
+            escolaridade = customtkinter.CTkComboBox(master=database.card_frame, values=[
+                                                        "Ensino Fundamental Incompleto", "Ensino Fundamental Completo", "Ensino Médio Incompleto", "Ensino Médio Completo", "Técnico Incompleto", "Técnico Completo", "Graduação Incompleta", "Graduação Completa"])
+
+            botao_voltar_home = criar_botao(database.card_frame, "Voltar", voltar_home)
+            botao_criar = criar_botao(
+                database.card_frame, "Editar Currículo",
+                lambda: criar_curriculo(nome_entry.get(), contato_entry.get(),endereco_entry.get(), horarios.get(),escolaridade.get(), checagem=1))
 
         nome_entry.pack(pady=20, padx=20)
         contato_entry.pack(pady=20, padx=20)
@@ -169,8 +186,14 @@ def mostrar_resultados_filtro(termo):
 def botao_curriculo():
     botao_logout = criar_botao(database.card_frame, "Logout", voltar)
     if database.verificacao == 1:
-        botao_criar = criar_botao(
-            database.card_frame, "Criar Currículo", inputs_curriculo)
+        existe = database.buscar_curriculo(database.email_usuario_logado)
+        if not existe or existe == None:
+            botao_criar = criar_botao(
+                database.card_frame, "Criar Currículo", inputs_curriculo)
+        else:
+            botao_criar = criar_botao(
+                database.card_frame, "Editar Currículo", inputs_curriculo)
+            
         criar_buscar = criar_botao(
             database.card_frame, "Buscar Vagas", filtro_busca)
         botao_criar.pack(pady=20)
@@ -238,13 +261,19 @@ def botao_curriculo():
             
 
 
-def criar_curriculo(nome, contato, endereco, horarios, escolaridade):
+def criar_curriculo(nome, contato, endereco, horarios, escolaridade, checagem):
     email_usuario = database.email_usuario_logado
     if not all([nome, contato, endereco, horarios, escolaridade]):
         database.mensagem("Por favor, preencha todos os campos.")
         return
-    database.criar_curriculo(nome, contato, endereco,
-                             horarios, escolaridade, email_usuario)
+    
+    if checagem == 0:
+        database.criar_curriculo(nome, contato, endereco,
+                                horarios, escolaridade, email_usuario)
+    else:
+        database.editar_curriculo(nome, contato, endereco,
+                                horarios, escolaridade, email_usuario)
+        
     
 def criar_vaga(nome, requisitos, disponibilidade, salario):
     email_usuario = database.email_usuario_logado
