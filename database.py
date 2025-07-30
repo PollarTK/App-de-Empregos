@@ -19,12 +19,16 @@ root = customtkinter.CTk()
 root.geometry("800x400")
 verificacao = 0
 email_usuario_logado = None
+filtrado = False
 
 # Frames e Labels
 card_frame = customtkinter.CTkScrollableFrame(
     root, border_width=2, width=700, height=800, border_color="green", corner_radius=20)
 
 card_title = customtkinter.CTkLabel(card_frame, text="📝 Escolha uma Opção", font=(
+    "Arial", 16, "bold"), text_color="#4ECB71")
+
+card_busca_title = customtkinter.CTkLabel(card_frame, text="Resultados da Busca", font=(
     "Arial", 16, "bold"), text_color="#4ECB71")
 
 card_home_title = customtkinter.CTkLabel(
@@ -144,6 +148,14 @@ def buscar_vagas(email_usuario):
         cursor = executar_sql('SELECT * FROM vaga WHERE email_usuario=?',(email_usuario,))
     return cursor.fetchall()
 
+def filtrar_vagas_por_termo(termo):
+    padrao = f"%{termo}%"
+    cursor = executar_sql(
+        "SELECT * FROM vaga WHERE nome LIKE ? OR requisitos LIKE ? OR disponibilidade LIKE ?",
+        (padrao, padrao, padrao)
+    )
+    return cursor.fetchall()
+
 def buscar_curriculo(email_usuario):
     email_usuario = email_usuario_logado
     cursor = executar_sql('SELECT Id, nome, contato, endereco, horarios, escolaridade FROM curriculo WHERE email_usuario=?',(email_usuario,))
@@ -159,15 +171,25 @@ def buscar_candidatos(email_usuario):
         mensagem(f"{result}")
     return result
 
-def candidatar_todas():
-    busca = buscar_vagas()
-    curriculos = buscar_curriculo(email_usuario_logado)
-    nome = curriculos[0][1]  # Acessando o nome do candidato (supondo que seja a segunda coluna)
-    candidato_email = email_usuario_logado  # E-mail do candidato
-    for vaga in busca:
-        vaga_email = vaga[5]
-        executar_sql('''INSERT INTO candidatos (candidato_nome, candidato_email, vaga_email) VALUES (?, ?, ?)''',
-                     (nome, candidato_email, vaga_email))
+def candidatar_vagas_por_ids(ids):
+    if not ids:
+        mensagem("Nenhuma vaga filtrada para candidatura.")
+        return
+    # Buscar currículo do usuário logado
+    curr = buscar_curriculo(email_usuario_logado)
+    if not curr:
+        mensagem("Você ainda não possui um currículo.")
+        return
+    nome = curr[0][1]
+    email = email_usuario_logado
+
+    placeholders = ','.join('?' for _ in ids)
+    sql = f"""INSERT INTO candidatos (candidato_nome, candidato_email, vaga_email)
+              SELECT ?, ?, email_usuario FROM vaga WHERE id IN ({placeholders})"""
+    params = [nome, email] + ids
+    executar_sql(sql, tuple(params))
+    mensagem("Candidaturas enviadas com sucesso!")
+
 
 def candidatar(vaga):
     # Busca o currículo do usuário logado

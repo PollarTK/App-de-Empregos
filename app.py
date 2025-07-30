@@ -113,13 +113,66 @@ def inputs_curriculo():
         botao_voltar_home.pack(padx=20)
 
 
+def filtro_busca():
+    atualizar_layout()
+    filtro = criar_entry(database.card_frame, "O que está buscando?")
+    buscar = criar_botao(database.card_frame, "Buscar", lambda: mostrar_resultados_filtro(filtro.get()))
+    filtro.pack(pady=20)
+    buscar.pack(pady=20)
+
+def mostrar_resultados_filtro(termo):
+    vagas = database.filtrar_vagas_por_termo(termo)
+    ids = [vaga[0] for vaga in vagas]
+    ids_filtrados = ids
+
+    atualizar_layout()
+    botao_voltar = criar_botao(database.card_frame, "Voltar", voltar_home)
+    database.card_busca_title.pack(pady=20, side="top")
+    if not vagas or vagas == None:
+        frame_vagas = customtkinter.CTkFrame(database.card_frame)
+        frame_vagas.pack(pady=10)
+        requisitos = customtkinter.CTkLabel(
+                frame_vagas, text="Nenhuma Vaga Encontrada, Verifique se foi digitado corretamente.")
+        requisitos.pack(side="top", pady=5)
+        botao_voltar.pack(pady=10)
+    else:
+        for vaga in vagas:
+            # crie cards como no botao_curriculo
+            frame_vagas = customtkinter.CTkFrame(database.card_frame)
+            frame_vagas.pack(pady=10)
+            card_vaga = customtkinter.CTkScrollableFrame(frame_vagas, border_width=2, width=500, height=200, border_color="green",
+                                                corner_radius=10)
+            card_vaga.pack(pady=5)
+            nome_vaga = customtkinter.CTkLabel(
+                card_vaga, text=f"Vaga: {vaga[1]}")
+            nome_vaga.pack(side="top", pady=5)
+            requisitos = customtkinter.CTkLabel(
+                    card_vaga, text=f"Requisitos: {vaga[2]}")
+            requisitos.pack(side="top", pady=5)
+                
+            disponibilidade = customtkinter.CTkLabel(
+                    card_vaga, text=f"Disponibilidade: {vaga[3]}")
+            disponibilidade.pack(side="top", pady=5)
+                
+            salario = customtkinter.CTkLabel(
+                    card_vaga, text=f"Salário: {vaga[4]}")
+            salario.pack(side="top", pady=5)
+                
+                # Passa o ID da vaga para a função candidatar
+            botao_candidatar = criar_botao(card_vaga, "Candidatar-se", lambda vaga=vaga: database.candidatar(vaga))
+            botao_candidatar.pack(side="top")
+                
+        botao_voltar.pack(pady=10)
+        botao_cand_todas = criar_botao(database.card_frame, "Candidatar Todas", lambda: database.candidatar_vagas_por_ids(ids_filtrados))
+        botao_cand_todas.pack(pady=20,side="top")
+
 def botao_curriculo():
     botao_logout = criar_botao(database.card_frame, "Logout", voltar)
     if database.verificacao == 1:
         botao_criar = criar_botao(
             database.card_frame, "Criar Currículo", inputs_curriculo)
         criar_buscar = criar_botao(
-            database.card_frame, "Buscar Vagas", inputs_curriculo)
+            database.card_frame, "Buscar Vagas", filtro_busca)
         botao_criar.pack(pady=20)
         criar_buscar.pack(pady=20)
         # Frame para conter os cards de vagas
@@ -151,8 +204,6 @@ def botao_curriculo():
             botao_candidatar.pack(side="top")
             
         botao_logout.pack(pady=10)
-        botao_candidatar_todas = criar_botao(database.card_frame, "Candidatar Todas", lambda vaga=vaga: database.candidatar_todas())
-        botao_candidatar_todas.pack(pady=20, side="top")
     else:
         botao_criar = criar_botao(
             database.card_frame, "Criar Vaga", inputs_curriculo)
@@ -236,6 +287,8 @@ def voltar():
 
 def voltar_home():
     atualizar_layout()
+    card_frame = database.card_frame
+    card_frame._parent_canvas.yview_moveto(0.0)
     database.card_home_title.pack(pady=10, anchor="center")
     botao_curriculo()
 
