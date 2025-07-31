@@ -171,15 +171,40 @@ def buscar_curriculo(email_usuario):
     cursor = executar_sql('SELECT Id, nome, contato, endereco, horarios, escolaridade FROM curriculo WHERE email_usuario=?',(email_usuario,))
     return cursor.fetchall()
 
+def mostrar_popup_candidatos(lista_candidatos):
+    ctk = customtkinter
+    popup = ctk.CTk()
+    popup.title("Candidatos Encontrados")
+    popup.geometry("500x400")
+
+    frame_scroll = ctk.CTkScrollableFrame(popup, width=480, height=300)
+    frame_scroll.pack(pady=20)
+    
+    def fechar_popup():
+        popup.quit()
+        popup.destroy()
+
+    for candidato in lista_candidatos:
+        nome = candidato[1]
+        email = candidato[2]
+        texto = f"Nome: {nome}\nEmail: {email}\n"
+        label = ctk.CTkLabel(frame_scroll, text=texto, anchor="w", justify="center")
+        label.pack(pady=5, padx=10, anchor="w")
+
+    botao_fechar = ctk.CTkButton(popup, text="Fechar", command=fechar_popup)
+    botao_fechar.pack(pady=10)
+
+    popup.mainloop()
+
+
 def buscar_candidatos(email_usuario):
     email_usuario = email_usuario_logado
     cursor = executar_sql('SELECT * FROM candidatos WHERE vaga_email=?',(email_usuario,))
-    result = cursor.fetchall()
-    if not result or result == None:
-        mensagem("Ainda Não Há Candidatos!")
+    lista_candidatos = cursor.fetchall()
+    if not lista_candidatos:
+        mostrar_popup_candidatos([("Nenhum", "Ainda Não Há Candidatos!")])
     else:
-        mensagem(f"{result}")
-    return result
+        mostrar_popup_candidatos(lista_candidatos)
 
 def candidatar_vagas_por_ids(ids):
     if not ids:
@@ -206,20 +231,31 @@ def candidatar(vaga):
     curriculos = buscar_curriculo(email_usuario_logado)
     
     if not curriculos:
-        mensagem("Você Ainda Não Possui um Currículo")
+        mensagem("Você ainda não possui um currículo.")
         return
 
-    # Busca a vaga pelo ID
     if vaga:
-        nome = curriculos[0][1]  # Acessando o nome do candidato (supondo que seja a segunda coluna)
-        candidato_email = email_usuario_logado  # E-mail do candidato
+        nome = curriculos[0][1]
+        candidato_email = email_usuario_logado
         vaga_email = vaga[5]
-        #Insere os dados do candidato na tabela Candidatos
-        executar_sql('''INSERT INTO candidatos (candidato_nome, candidato_email, vaga_email) VALUES (?, ?, ?)''',
-                     (nome, candidato_email, vaga_email))
-        mensagem("Candidatura Enviada Com Sucesso!")
+
+        # Verifica se o candidato já se inscreveu nessa vaga
+        cursor = executar_sql(
+            "SELECT COUNT(*) FROM candidatos WHERE candidato_email=? AND vaga_email=?",
+            (candidato_email, vaga_email))
+        ja_candidatado = cursor.fetchone()[0]
+
+        if ja_candidatado > 0:
+            mensagem("Você já se candidatou a esta vaga.")
+        else:
+            executar_sql(
+                "INSERT INTO candidatos (candidato_nome, candidato_email, vaga_email) VALUES (?, ?, ?)",
+                (nome, candidato_email, vaga_email)
+            )
+            mensagem("Candidatura enviada com sucesso!")
     else:
         mensagem("Vaga não encontrada.")
+
 
 
 if __name__ == "__main__":

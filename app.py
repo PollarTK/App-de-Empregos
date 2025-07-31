@@ -184,7 +184,7 @@ def mostrar_resultados_filtro(termo):
         botao_cand_todas.pack(pady=20,side="top")
 
 def botao_curriculo():
-    botao_logout = criar_botao(database.card_frame, "Logout", voltar)
+    botao_logout = criar_botao(database.root, "Logout", voltar)
     if database.verificacao == 1:
         existe = database.buscar_curriculo(database.email_usuario_logado)
         if not existe or existe == None:
@@ -231,7 +231,6 @@ def botao_curriculo():
         botao_criar = criar_botao(
             database.card_frame, "Criar Vaga", inputs_curriculo)
         botao_criar.pack(side="top",pady=20)
-        botao_logout.pack(side="top",pady=10)
         # Frame para conter os cards de vagas
         frame_vagas = customtkinter.CTkFrame(database.card_frame)
         frame_vagas.pack(pady=10)
@@ -258,7 +257,8 @@ def botao_curriculo():
             
             botao_candidados = criar_botao(card_vaga, "Ver Candidatos", lambda: database.buscar_candidatos(database.email_usuario_logado))
             botao_candidados.pack(side="top")
-            
+        botao_logout.pack(side="top",pady=10)
+  
 
 
 def criar_curriculo(nome, contato, endereco, horarios, escolaridade, checagem):
