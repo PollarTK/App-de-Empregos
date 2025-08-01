@@ -139,12 +139,15 @@ def criar_curriculo(nome, contato, endereco, horarios, escolaridade, email):
 
 def editar_curriculo(nome, contato, endereco, horarios, escolaridade, email):
     executar_sql('''
-    UPDATE curriculo 
-    SET nome = ?, contato = ?, endereco = ?, horarios = ?, escolaridade = ?
-    WHERE email_usuario = ?
-    ''', (nome, contato, endereco, horarios, escolaridade, email))
+    UPDATE curriculo SET nome = ?, contato = ?, endereco = ?, horarios = ?, escolaridade = ? WHERE id = ?''',
+                (nome, contato, endereco, horarios, escolaridade, email))
     mensagem("Currículo Criado Com Sucesso!")
-
+    
+def editar_vaga(id_vaga, novo_nome, novos_requisitos, nova_disponibilidade, novo_salario):
+    executar_sql('''UPDATE vaga SET nome = ?, requisitos = ?, disponibilidade = ?, salario = ? WHERE id = ?''',
+                (novo_nome, novos_requisitos, nova_disponibilidade, novo_salario, id_vaga))
+    mensagem("Alterações Feitas!")
+    
 def criar_vaga(nome, requisitos, disponibilidade, salario, email):
     executar_sql('''INSERT INTO vaga (nome, requisitos, disponibilidade, salario, email_usuario) VALUES (?, ?, ?, ?, ?)''',
                  (nome, requisitos, disponibilidade, salario, email))
@@ -185,8 +188,8 @@ def mostrar_popup_candidatos(lista_candidatos):
         popup.destroy()
 
     for candidato in lista_candidatos:
-        nome = candidato[1]
-        email = candidato[2]
+        nome = candidato[1] if len(candidato) > 1 else "Nome não disponível"
+        email = candidato[2] if len(candidato) > 2 else "Email não disponível"
         texto = f"Nome: {nome}\nEmail: {email}\n"
         label = ctk.CTkLabel(frame_scroll, text=texto, anchor="w", justify="center")
         label.pack(pady=5, padx=10, anchor="w")
@@ -197,12 +200,13 @@ def mostrar_popup_candidatos(lista_candidatos):
     popup.mainloop()
 
 
+
 def buscar_candidatos(email_usuario):
     email_usuario = email_usuario_logado
     cursor = executar_sql('SELECT * FROM candidatos WHERE vaga_email=?',(email_usuario,))
     lista_candidatos = cursor.fetchall()
     if not lista_candidatos:
-        mostrar_popup_candidatos([("Nenhum", "Ainda Não Há Candidatos!")])
+        mostrar_popup_candidatos([("Nenhum", "Ainda Não Há Candidatos!", "")])
     else:
         mostrar_popup_candidatos(lista_candidatos)
 
@@ -255,7 +259,6 @@ def candidatar(vaga):
             mensagem("Candidatura enviada com sucesso!")
     else:
         mensagem("Vaga não encontrada.")
-
 
 
 if __name__ == "__main__":
