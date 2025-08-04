@@ -1,9 +1,11 @@
-import customtkinter,tkinter
-
+import customtkinter
+import os
 import database
 
 customtkinter.set_appearance_mode("dark")  # Modo escuro
 customtkinter.set_default_color_theme("green")  # Tema Verde
+FLAG_FILE = "empresas_geradas.flag"
+
 
 def criar_botao(master, texto, comando, largura=200, altura=40):
     return customtkinter.CTkButton(
@@ -69,6 +71,7 @@ def realizar_login(verificacao, email, senha):
     else:
         print("Login falhou. Verifique suas credenciais.")
 
+
 def inputs_curriculo():
     atualizar_layout()
     global existe
@@ -80,28 +83,31 @@ def inputs_curriculo():
             endereco_entry = criar_entry(database.card_frame, "Endereço")
 
             horarios = customtkinter.CTkComboBox(master=database.card_frame, values=[
-                                                "Qualquer", "Integral", "Manhã", "Tarde", "Noite"])
+                "Qualquer", "Integral", "Manhã", "Tarde", "Noite"])
             escolaridade = customtkinter.CTkComboBox(master=database.card_frame, values=[
-                                                    "Ensino Fundamental Incompleto", "Ensino Fundamental Completo", "Ensino Médio Incompleto", "Ensino Médio Completo", "Técnico Incompleto", "Técnico Completo", "Graduação Incompleta", "Graduação Completa"])
+                "Ensino Fundamental Incompleto", "Ensino Fundamental Completo", "Ensino Médio Incompleto", "Ensino Médio Completo", "Técnico Incompleto", "Técnico Completo", "Graduação Incompleta", "Graduação Completa"])
 
-            botao_voltar_home = criar_botao(database.card_frame, "Voltar", voltar_home)
+            botao_voltar_home = criar_botao(
+                database.card_frame, "Voltar", voltar_home)
             botao_criar = criar_botao(database.card_frame, "Criar Currículo",
-                lambda: criar_curriculo(nome_entry.get(), contato_entry.get(),endereco_entry.get(), horarios.get(), escolaridade.get(), checagem=0))
+                                      lambda: criar_curriculo(nome_entry.get(), contato_entry.get(), endereco_entry.get(), horarios.get(), escolaridade.get(), checagem=0))
         else:
             for dados in existe:
                 nome_entry = criar_entry(database.card_frame, f"{dados[1]}")
                 contato_entry = criar_entry(database.card_frame, f"{dados[2]}")
-                endereco_entry = criar_entry(database.card_frame, f"{dados[3]}")
+                endereco_entry = criar_entry(
+                    database.card_frame, f"{dados[3]}")
 
             horarios = customtkinter.CTkComboBox(master=database.card_frame, values=[
-                                                    "Qualquer", "Integral", "Manhã", "Tarde", "Noite"])
+                "Qualquer", "Integral", "Manhã", "Tarde", "Noite"])
             escolaridade = customtkinter.CTkComboBox(master=database.card_frame, values=[
-                                                        "Ensino Fundamental Incompleto", "Ensino Fundamental Completo", "Ensino Médio Incompleto", "Ensino Médio Completo", "Técnico Incompleto", "Técnico Completo", "Graduação Incompleta", "Graduação Completa"])
+                "Ensino Fundamental Incompleto", "Ensino Fundamental Completo", "Ensino Médio Incompleto", "Ensino Médio Completo", "Técnico Incompleto", "Técnico Completo", "Graduação Incompleta", "Graduação Completa"])
 
-            botao_voltar_home = criar_botao(database.card_frame, "Voltar", voltar_home)
+            botao_voltar_home = criar_botao(
+                database.card_frame, "Voltar", voltar_home)
             botao_criar = criar_botao(
                 database.card_frame, "Editar Currículo",
-                lambda: criar_curriculo(nome_entry.get(), contato_entry.get(),endereco_entry.get(), horarios.get(),escolaridade.get(), checagem=1))
+                lambda: database.editar_curriculo(nome_entry.get(), contato_entry.get(), endereco_entry.get(), horarios.get(), escolaridade.get(), database.email_usuario_logado))
 
         nome_entry.pack(pady=20, padx=20)
         contato_entry.pack(pady=20, padx=20)
@@ -113,12 +119,13 @@ def inputs_curriculo():
     else:
         nome_entry = criar_entry(database.card_frame, "Nome")
         requisitos_entry = customtkinter.CTkComboBox(master=database.card_frame, values=[
-                                                "Ensino Fundamental Incompleto", "Ensino Fundamental Completo", "Ensino Médio Incompleto", "Ensino Médio Completo", "Técnico Incompleto", "Técnico Completo", "Graduação Incompleta", "Graduação Completa"])
+            "Ensino Fundamental Incompleto", "Ensino Fundamental Completo", "Ensino Médio Incompleto", "Ensino Médio Completo", "Técnico Incompleto", "Técnico Completo", "Graduação Incompleta", "Graduação Completa"])
         disponibilidade_entry = customtkinter.CTkComboBox(master=database.card_frame, values=[
-                                            "Qualquer", "Integral", "Manhã", "Tarde", "Noite"])
+            "Qualquer", "Integral", "Manhã", "Tarde", "Noite"])
         salario_entry = criar_entry(database.card_frame, "salario")
-        
-        botao_voltar_home = criar_botao(database.card_frame, "Voltar", voltar_home)
+
+        botao_voltar_home = criar_botao(
+            database.card_frame, "Voltar", voltar_home)
         botao_criar = criar_botao(database.card_frame, "Criar Vaga", lambda: criar_vaga(
             nome_entry.get(), requisitos_entry.get(), disponibilidade_entry.get(), salario_entry.get()))
 
@@ -133,9 +140,11 @@ def inputs_curriculo():
 def filtro_busca():
     atualizar_layout()
     filtro = criar_entry(database.card_frame, "O que está buscando?")
-    buscar = criar_botao(database.card_frame, "Buscar", lambda: mostrar_resultados_filtro(filtro.get()))
+    buscar = criar_botao(database.card_frame, "Buscar",
+                         lambda: mostrar_resultados_filtro(filtro.get()))
     filtro.pack(pady=20)
     buscar.pack(pady=20)
+
 
 def mostrar_resultados_filtro(termo):
     vagas = database.filtrar_vagas_por_termo(termo)
@@ -149,7 +158,7 @@ def mostrar_resultados_filtro(termo):
         frame_vagas = customtkinter.CTkFrame(database.card_frame)
         frame_vagas.pack(pady=10)
         requisitos = customtkinter.CTkLabel(
-                frame_vagas, text="Nenhuma Vaga Encontrada, Verifique se foi digitado corretamente.")
+            frame_vagas, text="Nenhuma Vaga Encontrada, Verifique se foi digitado corretamente.")
         requisitos.pack(side="top", pady=5)
         botao_voltar.pack(pady=10)
     else:
@@ -158,32 +167,38 @@ def mostrar_resultados_filtro(termo):
             frame_vagas = customtkinter.CTkFrame(database.card_frame)
             frame_vagas.pack(pady=10)
             card_vaga = customtkinter.CTkScrollableFrame(frame_vagas, border_width=2, width=500, height=200, border_color="green",
-                                                corner_radius=10)
+                                                         corner_radius=10)
             card_vaga.pack(pady=5)
             nome_vaga = customtkinter.CTkLabel(
                 card_vaga, text=f"Vaga: {vaga[1]}")
             nome_vaga.pack(side="top", pady=5)
             requisitos = customtkinter.CTkLabel(
-                    card_vaga, text=f"Requisitos: {vaga[2]}")
+                card_vaga, text=f"Requisitos: {vaga[2]}")
             requisitos.pack(side="top", pady=5)
-                
+
             disponibilidade = customtkinter.CTkLabel(
-                    card_vaga, text=f"Disponibilidade: {vaga[3]}")
+                card_vaga, text=f"Disponibilidade: {vaga[3]}")
             disponibilidade.pack(side="top", pady=5)
-                
+
             salario = customtkinter.CTkLabel(
-                    card_vaga, text=f"Salário: {vaga[4]}")
+                card_vaga, text=f"Salário: {vaga[4]}")
             salario.pack(side="top", pady=5)
-                
-                # Passa o ID da vaga para a função candidatar
-            botao_candidatar = criar_botao(card_vaga, "Candidatar-se", lambda vaga=vaga: database.candidatar(vaga))
+
+            # Passa o ID da vaga para a função candidatar
+            botao_candidatar = criar_botao(
+                card_vaga, "Candidatar-se", lambda vaga=vaga: database.candidatar(vaga))
             botao_candidatar.pack(side="top")
-                
+
         botao_voltar.pack(pady=10)
-        botao_cand_todas = criar_botao(database.card_frame, "Candidatar Todas", lambda: database.candidatar_vagas_por_ids(ids_filtrados))
-        botao_cand_todas.pack(pady=20,side="top")
+        botao_cand_todas = criar_botao(
+            database.card_frame, "Candidatar Todas", lambda: database.candidatar_vagas_por_ids(ids_filtrados))
+        botao_cand_todas.pack(pady=20, side="top")
+
 
 def botao_curriculo():
+    """
+    Interface
+    """
     botao_logout = criar_botao(database.card_frame, "Logout", voltar)
     if database.verificacao == 1:
         existe = database.buscar_curriculo(database.email_usuario_logado)
@@ -193,7 +208,7 @@ def botao_curriculo():
         else:
             botao_criar = criar_botao(
                 database.card_frame, "Editar Currículo", inputs_curriculo)
-            
+
         criar_buscar = criar_botao(
             database.card_frame, "Buscar Vagas", filtro_busca)
         botao_criar.pack(pady=20)
@@ -206,7 +221,7 @@ def botao_curriculo():
         for vaga in vagas:
             # Cria um novo card para cada vaga
             card_vaga = customtkinter.CTkScrollableFrame(frame_vagas, border_width=2, width=500, height=200, border_color="green",
-                                            corner_radius=10)
+                                                         corner_radius=10)
             card_vaga.pack(pady=5)
             nome_vaga = customtkinter.CTkLabel(
                 card_vaga, text=f"Vaga: {vaga[1]}")
@@ -214,24 +229,25 @@ def botao_curriculo():
             requisitos = customtkinter.CTkLabel(
                 card_vaga, text=f"Requisitos: {vaga[2]}")
             requisitos.pack(side="top", pady=5)
-            
+
             disponibilidade = customtkinter.CTkLabel(
                 card_vaga, text=f"Disponibilidade: {vaga[3]}")
             disponibilidade.pack(side="top", pady=5)
-            
+
             salario = customtkinter.CTkLabel(
                 card_vaga, text=f"Salário: {vaga[4]}")
             salario.pack(side="top", pady=5)
-            
+
             # Passa o ID da vaga para a função candidatar
-            botao_candidatar = criar_botao(card_vaga, "Candidatar-se", lambda vaga=vaga: database.candidatar(vaga))
+            botao_candidatar = criar_botao(
+                card_vaga, "Candidatar-se", lambda vaga=vaga: database.candidatar(vaga))
             botao_candidatar.pack(side="top")
-            
+
     else:
         botao_criar = criar_botao(
             database.card_frame, "Criar Vaga", inputs_curriculo)
-        botao_criar.pack(side="top",pady=10)
-        botao_logout.pack(side="top",pady=10)
+        botao_criar.pack(side="top", pady=10)
+        botao_logout.pack(side="top", pady=10)
         # Frame para conter os cards de vagas
         frame_vagas = customtkinter.CTkFrame(database.card_frame)
         frame_vagas.pack(pady=10)
@@ -239,7 +255,7 @@ def botao_curriculo():
         for vaga in vagas:
             # Cria um novo card para cada vaga
             card_vaga = customtkinter.CTkScrollableFrame(frame_vagas, border_width=2, width=500, height=300, border_color="green",
-                                            corner_radius=10)
+                                                         corner_radius=10)
             card_vaga.pack(pady=5)
             nome_vaga = customtkinter.CTkLabel(
                 card_vaga, text=f"Vaga: {vaga[1]}")
@@ -247,21 +263,24 @@ def botao_curriculo():
             requisitos = customtkinter.CTkLabel(
                 card_vaga, text=f"Requisitos: {vaga[2]}")
             requisitos.pack(side="top", pady=5)
-            
+
             disponibilidade = customtkinter.CTkLabel(
                 card_vaga, text=f"Disponibilidade: {vaga[3]}")
             disponibilidade.pack(side="top", pady=5)
-            
+
             salario = customtkinter.CTkLabel(
                 card_vaga, text=f"Salário: {vaga[4]}")
             salario.pack(side="top", pady=5)
-            
-            botao_excluir = criar_botao(card_vaga, "Excluir", lambda vaga=vaga: excluir(vaga))
-            botao_candidados = criar_botao(card_vaga, "Ver Candidatos", lambda: database.buscar_candidatos(database.email_usuario_logado))
-            editar = criar_botao(card_vaga, "Editar", lambda vaga=vaga: editar_vaga_ui(vaga))
-            botao_candidados.pack(side="top",pady=5)
-            editar.pack(side="top",pady=5)
-            botao_excluir.pack(side="top",pady=5)
+
+            botao_excluir = criar_botao(
+                card_vaga, "Excluir", lambda vaga=vaga: excluir(vaga))
+            botao_candidados = criar_botao(
+                card_vaga, "Ver Candidatos", lambda: database.buscar_candidatos(database.email_usuario_logado))
+            editar = criar_botao(card_vaga, "Editar",
+                                 lambda vaga=vaga: editar_vaga_ui(vaga))
+            botao_candidados.pack(side="top", pady=5)
+            editar.pack(side="top", pady=5)
+            botao_excluir.pack(side="top", pady=5)
 
 
 def excluir(vaga):
@@ -278,7 +297,7 @@ def editar_vaga_ui(vaga):
     id_vaga, nome, requisitos, disponibilidade, salario = vaga[:5]
 
     nome_entry = criar_entry(database.card_frame, nome)
-    
+
     requisitos_entry = customtkinter.CTkComboBox(master=database.card_frame, values=[
         "Ensino Fundamental Incompleto", "Ensino Fundamental Completo",
         "Ensino Médio Incompleto", "Ensino Médio Completo",
@@ -314,26 +333,29 @@ def editar_vaga_ui(vaga):
     botao_salvar.pack(pady=20)
     botao_voltar.pack(pady=20)
 
+
 def criar_curriculo(nome, contato, endereco, horarios, escolaridade, checagem):
     email_usuario = database.email_usuario_logado
     if not all([nome, contato, endereco, horarios, escolaridade]):
         database.mensagem("Por favor, preencha todos os campos.")
         return
-    
+
     if checagem == 0:
         database.criar_curriculo(nome, contato, endereco,
-                                horarios, escolaridade, email_usuario)
+                                 horarios, escolaridade, email_usuario)
     else:
         database.editar_curriculo(nome, contato, endereco,
-                                horarios, escolaridade, email_usuario)
-        
-    
+                                  horarios, escolaridade, email_usuario)
+
+
 def criar_vaga(nome, requisitos, disponibilidade, salario):
     email_usuario = database.email_usuario_logado
     if not all([nome, requisitos, disponibilidade, salario]):
-        database.mensagem("Por favor, preencha todos os campos.")        
+        database.mensagem("Por favor, preencha todos os campos.")
         return
-    database.criar_vaga(nome, requisitos, disponibilidade, salario, email_usuario)
+    database.criar_vaga(nome, requisitos, disponibilidade,
+                        salario, email_usuario)
+
 
 def cadastrar(verificacao):
     atualizar_layout()
@@ -357,14 +379,15 @@ def atualizar_layout():
     for widget in database.card_frame.winfo_children():
         widget.pack_forget()
 
+
 def voltar():
     atualizar_layout()
     database.email_usuario_logado = None
     card_frame = database.card_frame
     card_frame._parent_canvas.yview_moveto(0.0)
     database.card_title.pack(pady=20, side="top")
-    button.pack(pady=10,padx=20)
-    button2.pack(pady=10,padx=20)
+    button.pack(pady=10, padx=20)
+    button2.pack(pady=10, padx=20)
 
 
 def voltar_home():
@@ -380,7 +403,19 @@ button = criar_botao(database.card_frame, "Procuro Emprego",
                      lambda: botao_emprego(1))
 button2 = criar_botao(database.card_frame, "Sou Empresa",
                       lambda: botao_emprego(2))
-button.pack(pady=10,padx=20)
-button2.pack(pady=10,padx=20)
+button.pack(pady=10, padx=20)
+button2.pack(pady=10, padx=20)
 
-database.root.mainloop()
+
+if __name__ == "__main__":
+    database.criar_tabelas()
+
+    # Executa apenas se o arquivo de flag não existir
+    if not os.path.exists(FLAG_FILE):
+        database.empresas_aleatorias()
+
+        # Cria o arquivo de flag para não executar novamente
+        with open(FLAG_FILE, "w") as f:
+            f.write("Empresas geradas")
+
+    database.root.mainloop()

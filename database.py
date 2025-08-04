@@ -17,7 +17,9 @@ TABLES = {
 
 root = customtkinter.CTk()
 root.geometry("800x400")
-verificacao = 0
+
+# Variáveis globais
+verificacao = 0  # 1 = empregado, 0 = empregador
 email_usuario_logado = None
 
 # Frames e Labels
@@ -63,7 +65,7 @@ def criar_tabelas():
 
 def empresas_aleatorias():
     empresas = [
-        ("empresa1@gmail.com", "Simas Turbo", "123"),
+        ("empresa1@gmail.com", "Copíadora", "123"),
         ("techjobs@empresa.com", "Tech Jobs", "123"),
         ("vagasrh@empresa.com", "Vagas RH", "123"),
         ("construtora@concreto.com", "Construtora Concreto", "123"),
@@ -102,7 +104,7 @@ def criar_conta(verificacao, email, nome, senha):
     if verificar_email(email, tabela):
         mensagem("LOG: Email Já Cadastrado.")
         return
-    
+
     elif "@" not in email:
         mensagem("Por favor, insira um email válido")
         return
@@ -137,17 +139,20 @@ def criar_curriculo(nome, contato, endereco, horarios, escolaridade, email):
                  (nome, contato, endereco, horarios, escolaridade, email))
     mensagem("Currículo Criado Com Sucesso!")
 
+
 def editar_curriculo(nome, contato, endereco, horarios, escolaridade, email):
     executar_sql('''
-    UPDATE curriculo SET nome = ?, contato = ?, endereco = ?, horarios = ?, escolaridade = ? WHERE id = ?''',
-                (nome, contato, endereco, horarios, escolaridade, email))
-    mensagem("Currículo Criado Com Sucesso!")
-    
+    UPDATE curriculo SET nome = ?, contato = ?, endereco = ?, horarios = ?, escolaridade = ? WHERE email_usuario = ?''',
+                 (nome, contato, endereco, horarios, escolaridade, email))
+    mensagem("Currículo Editado!")
+
+
 def editar_vaga(id_vaga, novo_nome, novos_requisitos, nova_disponibilidade, novo_salario):
     executar_sql('''UPDATE vaga SET nome = ?, requisitos = ?, disponibilidade = ?, salario = ? WHERE id = ?''',
-                (novo_nome, novos_requisitos, nova_disponibilidade, novo_salario, id_vaga))
+                 (novo_nome, novos_requisitos, nova_disponibilidade, novo_salario, id_vaga))
     mensagem("Alterações Feitas!")
-    
+
+
 def criar_vaga(nome, requisitos, disponibilidade, salario, email):
     executar_sql('''INSERT INTO vaga (nome, requisitos, disponibilidade, salario, email_usuario) VALUES (?, ?, ?, ?, ?)''',
                  (nome, requisitos, disponibilidade, salario, email))
@@ -158,8 +163,10 @@ def buscar_vagas(email_usuario):
     if verificacao == 1:
         cursor = executar_sql('SELECT * FROM vaga')
     else:
-        cursor = executar_sql('SELECT * FROM vaga WHERE email_usuario=?',(email_usuario,))
+        cursor = executar_sql(
+            'SELECT * FROM vaga WHERE email_usuario=?', (email_usuario,))
     return cursor.fetchall()
+
 
 def filtrar_vagas_por_termo(termo):
     padrao = f"%{termo}%"
@@ -169,10 +176,13 @@ def filtrar_vagas_por_termo(termo):
     )
     return cursor.fetchall()
 
+
 def buscar_curriculo(email_usuario):
     email_usuario = email_usuario_logado
-    cursor = executar_sql('SELECT Id, nome, contato, endereco, horarios, escolaridade FROM curriculo WHERE email_usuario=?',(email_usuario,))
+    cursor = executar_sql(
+        'SELECT Id, nome, contato, endereco, horarios, escolaridade FROM curriculo WHERE email_usuario=?', (email_usuario,))
     return cursor.fetchall()
+
 
 def mostrar_popup_candidatos(lista_candidatos):
     ctk = customtkinter
@@ -182,7 +192,7 @@ def mostrar_popup_candidatos(lista_candidatos):
 
     frame_scroll = ctk.CTkScrollableFrame(popup, width=480, height=300)
     frame_scroll.pack(pady=20)
-    
+
     def fechar_popup():
         popup.quit()
         popup.destroy()
@@ -191,7 +201,8 @@ def mostrar_popup_candidatos(lista_candidatos):
         nome = candidato[1] if len(candidato) > 1 else "Nome não disponível"
         email = candidato[2] if len(candidato) > 2 else "Email não disponível"
         texto = f"Nome: {nome}\nEmail: {email}\n"
-        label = ctk.CTkLabel(frame_scroll, text=texto, anchor="w", justify="center")
+        label = ctk.CTkLabel(frame_scroll, text=texto,
+                             anchor="w", justify="center")
         label.pack(pady=5, padx=10, anchor="w")
 
     botao_fechar = ctk.CTkButton(popup, text="Fechar", command=fechar_popup)
@@ -200,40 +211,69 @@ def mostrar_popup_candidatos(lista_candidatos):
     popup.mainloop()
 
 
-
 def buscar_candidatos(email_usuario):
     email_usuario = email_usuario_logado
-    cursor = executar_sql('SELECT * FROM candidatos WHERE vaga_email=?',(email_usuario,))
+    cursor = executar_sql(
+        'SELECT * FROM candidatos WHERE vaga_email=?', (email_usuario,))
     lista_candidatos = cursor.fetchall()
     if not lista_candidatos:
         mostrar_popup_candidatos([("Nenhum", "Ainda Não Há Candidatos!", "")])
     else:
         mostrar_popup_candidatos(lista_candidatos)
 
+
 def candidatar_vagas_por_ids(ids):
     if not ids:
         mensagem("Nenhuma vaga filtrada para candidatura.")
         return
+
     # Buscar currículo do usuário logado
     curr = buscar_curriculo(email_usuario_logado)
     if not curr:
         mensagem("Você ainda não possui um currículo.")
         return
+
     nome = curr[0][1]
     email = email_usuario_logado
 
+    # Busca as vagas para as quais o candidato já se inscreveu
     placeholders = ','.join('?' for _ in ids)
-    sql = f"""INSERT INTO candidatos (candidato_nome, candidato_email, vaga_email)
-              SELECT ?, ?, email_usuario FROM vaga WHERE id IN ({placeholders})"""
-    params = [nome, email] + ids
-    executar_sql(sql, tuple(params))
-    mensagem("Candidaturas enviadas com sucesso!")
+    sql_verifica = f"""
+        SELECT vaga_email FROM candidatos 
+        WHERE candidato_email = ? 
+        AND vaga_email IN (SELECT email_usuario FROM vaga WHERE id IN ({placeholders}))
+    """
+    params_verifica = [email] + ids
+    cursor = executar_sql(sql_verifica, tuple(params_verifica))
+    # conjunto de vaga_emails já candidatados
+    ja_candidatadas = {row[0] for row in cursor.fetchall()}
+
+    # Filtra as vagas novas (não candidatas ainda)
+    sql_busca_vagas = f"SELECT email_usuario FROM vaga WHERE id IN ({placeholders})"
+    cursor_vagas = executar_sql(sql_busca_vagas, tuple(ids))
+    todas_vagas_emails = [row[0] for row in cursor_vagas.fetchall()]
+
+    novas_vagas_emails = [
+        vaga_email for vaga_email in todas_vagas_emails if vaga_email not in ja_candidatadas]
+
+    if not novas_vagas_emails:
+        mensagem("Você já se candidatou a todas as vagas filtradas.")
+        return
+
+    # Inserção das novas candidaturas
+    sql_inserir = f"""INSERT INTO candidatos (candidato_nome, candidato_email, vaga_email)
+                      VALUES (?, ?, ?)"""
+    for vaga_email in novas_vagas_emails:
+        executar_sql(sql_inserir, (nome, email, vaga_email))
+
+    mensagem(
+        f"Candidatura enviada para {len(novas_vagas_emails)} nova(s) vaga(s).")
 
 
 def candidatar(vaga):
     # Busca o currículo do usuário logado
     curriculos = buscar_curriculo(email_usuario_logado)
-    
+
     if not curriculos:
         mensagem("Você ainda não possui um currículo.")
         return
@@ -259,8 +299,3 @@ def candidatar(vaga):
             mensagem("Candidatura enviada com sucesso!")
     else:
         mensagem("Vaga não encontrada.")
-
-
-if __name__ == "__main__":
-    criar_tabelas()
-    empresas_aleatorias()
